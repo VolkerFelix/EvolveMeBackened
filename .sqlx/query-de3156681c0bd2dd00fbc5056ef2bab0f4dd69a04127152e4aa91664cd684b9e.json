@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO league_standings (id, season_id, team_id, games_played, wins, draws, losses, position, last_updated)\n        VALUES ($1, $2, $3, 0, 0, 0, 0, 1, NOW())\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "de3156681c0bd2dd00fbc5056ef2bab0f4dd69a04127152e4aa91664cd684b9e"
+}

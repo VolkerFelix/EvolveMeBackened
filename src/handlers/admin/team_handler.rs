@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Result, HttpRequest, HttpMessage};
+use actix_web::{web, HttpResponse, Result};
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,6 @@ pub struct TeamQueryParams {
     pub page: Option<i32>,
     pub limit: Option<i32>,
     pub search: Option<String>,
-    pub league_id: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -63,6 +62,7 @@ pub struct CreateTeamRequest {
     pub color: String,
     pub formation: Option<String>,
     pub league_id: Option<Uuid>,
+    pub owner_id: Uuid,
 }
 
 #[derive(Deserialize)]
@@ -240,25 +240,10 @@ pub async fn get_team_by_id(
 pub async fn create_team(
     pool: web::Data<PgPool>,
     body: web::Json<CreateTeamRequest>,
-    req: actix_web::HttpRequest,
+    _req: actix_web::HttpRequest,
 ) -> Result<HttpResponse> {
-    // Get current user from JWT token claims
-    let claims = req.extensions().get::<crate::middleware::auth::Claims>().cloned();
-    let owner_id = match claims {
-        Some(claims) => match Uuid::parse_str(&claims.sub) {
-            Ok(id) => id,
-            Err(_) => {
-                return Ok(HttpResponse::BadRequest().json(serde_json::json!({
-                    "error": "Invalid user ID in token"
-                })));
-            }
-        },
-        None => {
-            return Ok(HttpResponse::Unauthorized().json(serde_json::json!({
-                "error": "No user information found"
-            })));
-        }
-    };
+    // Use the provided owner_id from the request body
+    let owner_id = body.owner_id;
 
     let team_id = Uuid::new_v4();
     let now = chrono::Utc::now();

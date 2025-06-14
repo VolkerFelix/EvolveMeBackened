@@ -63,5 +63,11 @@ pub fn init_admin_routes(cfg: &mut web::ServiceConfig) {
                     .route(web::get().to(league_handler::get_league_by_id))
                     .route(web::patch().to(league_handler::update_league))
             )
+            .service(
+                web::resource("/leagues/{id}/teams")
+                    .route(web::get().to(league_handler::get_league_teams))
+                    .route(web::post().to(league_handler::assign_team_to_league))
+                    .route(web::delete().to(league_handler::remove_team_from_league))
+            )
     );
 }

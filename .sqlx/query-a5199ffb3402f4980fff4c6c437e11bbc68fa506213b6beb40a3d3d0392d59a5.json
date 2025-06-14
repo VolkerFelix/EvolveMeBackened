@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            t.id,\n            t.team_name as name,\n            t.team_color as color,\n            t.created_at,\n            t.user_id as owner_id,\n            COUNT(tm.user_id) as member_count,\n            COALESCE(SUM(ua.stamina + ua.strength), 0) as total_power,\n            ls.games_played,\n            ls.wins,\n            ls.draws,\n            ls.losses,\n            ls.points,\n            ls.position\n        FROM league_standings ls\n        JOIN teams t ON ls.team_id = t.id\n        LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.status = 'active'\n        LEFT JOIN user_avatars ua ON tm.user_id = ua.user_id\n        WHERE ls.season_id = $1\n        GROUP BY t.id, t.team_name, t.team_color, t.created_at, t.user_id, ls.games_played, ls.wins, ls.draws, ls.losses, ls.points, ls.position\n        ORDER BY ls.position ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "color",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "member_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_power",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "games_played",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "wins",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "draws",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "losses",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "position",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "a5199ffb3402f4980fff4c6c437e11bbc68fa506213b6beb40a3d3d0392d59a5"
+}

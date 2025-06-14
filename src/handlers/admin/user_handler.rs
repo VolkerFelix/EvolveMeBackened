@@ -53,7 +53,6 @@ pub struct UserQueryParams {
     pub limit: Option<i32>,
     pub search: Option<String>,
     pub team_id: Option<String>,
-    pub status: Option<String>,
 }
 
 #[derive(Deserialize)]

@@ -31,11 +31,19 @@ pub struct CreateLeagueRequest {
 #[derive(Deserialize)]
 pub struct UpdateLeagueRequest {
     pub name: Option<String>,
-    pub description: Option<String>,
-    pub max_teams: Option<i32>,
     pub season_start_date: Option<DateTime<Utc>>,
     pub season_end_date: Option<DateTime<Utc>>,
     pub is_active: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct AssignTeamRequest {
+    pub team_id: Uuid,
+}
+
+#[derive(Deserialize)]
+pub struct RemoveTeamRequest {
+    pub team_id: Uuid,
 }
 
 // GET /admin/leagues - Get all leagues
@@ -252,7 +260,6 @@ pub async fn update_league(
     updates.push(format!("updated_at = ${}", param_count));
     let now = chrono::Utc::now();
     params.push(Box::new(now));
-    param_count += 1;
 
     // For simplicity, let's use a direct query approach
     let mut query_builder = sqlx::QueryBuilder::new("UPDATE league_seasons SET ");
@@ -314,4 +321,220 @@ pub async fn update_league(
             })))
         }
     }
+}
+
+// POST /admin/leagues/{id}/teams - Assign team to league
+pub async fn assign_team_to_league(
+    pool: web::Data<PgPool>,
+    path: web::Path<Uuid>,
+    body: web::Json<AssignTeamRequest>,
+) -> Result<HttpResponse> {
+    let league_id = path.into_inner();
+    let team_id = body.team_id;
+
+    // Check if league exists
+    let league_exists = sqlx::query!(
+        "SELECT id FROM league_seasons WHERE id = $1",
+        league_id
+    )
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(|e| {
+        eprintln!("Database error checking league: {}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?;
+
+    if league_exists.is_none() {
+        return Ok(HttpResponse::NotFound().json(serde_json::json!({
+            "error": "League not found"
+        })));
+    }
+
+    // Check if team exists
+    let team_exists = sqlx::query!(
+        "SELECT id FROM teams WHERE id = $1",
+        team_id
+    )
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(|e| {
+        eprintln!("Database error checking team: {}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?;
+
+    if team_exists.is_none() {
+        return Ok(HttpResponse::NotFound().json(serde_json::json!({
+            "error": "Team not found"
+        })));
+    }
+
+    // Check if team is already assigned to this league
+    let existing_assignment = sqlx::query!(
+        "SELECT id FROM league_standings WHERE season_id = $1 AND team_id = $2",
+        league_id,
+        team_id
+    )
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(|e| {
+        eprintln!("Database error checking existing assignment: {}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?;
+
+    if existing_assignment.is_some() {
+        return Ok(HttpResponse::Conflict().json(serde_json::json!({
+            "error": "Team is already assigned to this league"
+        })));
+    }
+
+    // Insert team into league standings
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO league_standings (id, season_id, team_id, games_played, wins, draws, losses, position, last_updated)
+        VALUES ($1, $2, $3, 0, 0, 0, 0, 1, NOW())
+        "#,
+        Uuid::new_v4(),
+        league_id,
+        team_id
+    )
+    .execute(pool.get_ref())
+    .await;
+
+    match result {
+        Ok(_) => {
+            let response = ApiResponse {
+                data: serde_json::json!({
+                    "league_id": league_id,
+                    "team_id": team_id,
+                    "message": "Team assigned to league successfully"
+                }),
+                success: true,
+                message: Some("Team assigned to league successfully".to_string()),
+            };
+            Ok(HttpResponse::Created().json(response))
+        }
+        Err(e) => {
+            eprintln!("Database error assigning team to league: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to assign team to league"
+            })))
+        }
+    }
+}
+
+// DELETE /admin/leagues/{id}/teams - Remove team from league
+pub async fn remove_team_from_league(
+    pool: web::Data<PgPool>,
+    path: web::Path<Uuid>,
+    body: web::Json<RemoveTeamRequest>,
+) -> Result<HttpResponse> {
+    let league_id = path.into_inner();
+    let team_id = body.team_id;
+
+    let result = sqlx::query!(
+        "DELETE FROM league_standings WHERE season_id = $1 AND team_id = $2",
+        league_id,
+        team_id
+    )
+    .execute(pool.get_ref())
+    .await;
+
+    match result {
+        Ok(result) => {
+            if result.rows_affected() > 0 {
+                let response = ApiResponse {
+                    data: serde_json::json!({
+                        "league_id": league_id,
+                        "team_id": team_id
+                    }),
+                    success: true,
+                    message: Some("Team removed from league successfully".to_string()),
+                };
+                Ok(HttpResponse::Ok().json(response))
+            } else {
+                Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "Team not found in this league"
+                })))
+            }
+        }
+        Err(e) => {
+            eprintln!("Database error removing team from league: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to remove team from league"
+            })))
+        }
+    }
+}
+
+// GET /admin/leagues/{id}/teams - Get teams assigned to a league
+pub async fn get_league_teams(
+    pool: web::Data<PgPool>,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponse> {
+    let league_id = path.into_inner();
+
+    let rows = sqlx::query!(
+        r#"
+        SELECT 
+            t.id,
+            t.team_name as name,
+            t.team_color as color,
+            t.created_at,
+            t.user_id as owner_id,
+            COUNT(tm.user_id) as member_count,
+            COALESCE(SUM(ua.stamina + ua.strength), 0) as total_power,
+            ls.games_played,
+            ls.wins,
+            ls.draws,
+            ls.losses,
+            ls.points,
+            ls.position
+        FROM league_standings ls
+        JOIN teams t ON ls.team_id = t.id
+        LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.status = 'active'
+        LEFT JOIN user_avatars ua ON tm.user_id = ua.user_id
+        WHERE ls.season_id = $1
+        GROUP BY t.id, t.team_name, t.team_color, t.created_at, t.user_id, ls.games_played, ls.wins, ls.draws, ls.losses, ls.points, ls.position
+        ORDER BY ls.position ASC
+        "#,
+        league_id
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .map_err(|e| {
+        eprintln!("Database error getting league teams: {}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?;
+
+    let teams: Vec<serde_json::Value> = rows
+        .into_iter()
+        .map(|row| serde_json::json!({
+            "id": row.id,
+            "name": row.name,
+            "color": row.color,
+            "member_count": row.member_count,
+            "max_members": 5,
+            "total_power": row.total_power,
+            "formation": "circle",
+            "is_active": true,
+            "created_at": row.created_at,
+            "owner_id": row.owner_id,
+            "league_stats": {
+                "games_played": row.games_played,
+                "wins": row.wins,
+                "draws": row.draws,
+                "losses": row.losses,
+                "points": row.points,
+                "position": row.position
+            }
+        }))
+        .collect();
+
+    let response = ApiResponse {
+        data: teams,
+        success: true,
+        message: None,
+    };
+
+    Ok(HttpResponse::Ok().json(response))
 }
