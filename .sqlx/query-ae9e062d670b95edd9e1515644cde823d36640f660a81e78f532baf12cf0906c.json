@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                tm.team_id,\n                COUNT(tm.user_id) as member_count,\n                COALESCE(SUM(ua.stamina + ua.strength), 0) as total_power\n            FROM team_members tm\n            LEFT JOIN user_avatars ua ON tm.user_id = ua.user_id\n            WHERE tm.team_id = $1\n            AND tm.status = 'active'\n            GROUP BY tm.team_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "member_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_power",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "ae9e062d670b95edd9e1515644cde823d36640f660a81e78f532baf12cf0906c"
+}

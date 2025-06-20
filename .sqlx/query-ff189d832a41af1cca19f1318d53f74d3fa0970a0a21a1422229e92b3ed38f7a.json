@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                COUNT(*) as total_games,\n                COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_games,\n                COUNT(CASE WHEN status = 'finished' THEN 1 END) as finished_games,\n                COUNT(CASE WHEN status = 'postponed' THEN 1 END) as postponed_games\n            FROM league_games \n            WHERE DATE(scheduled_time) = CURRENT_DATE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_games",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "scheduled_games",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "finished_games",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "postponed_games",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ff189d832a41af1cca19f1318d53f74d3fa0970a0a21a1422229e92b3ed38f7a"
+}
