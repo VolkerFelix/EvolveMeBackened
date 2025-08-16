@@ -74,9 +74,10 @@ pub async fn insert_workout_data(
         INSERT INTO workout_data (
             user_id, device_id, heart_rate_data, 
             calories_burned, workout_uuid, workout_start, workout_end,
-            duration_minutes, avg_heart_rate, max_heart_rate, min_heart_rate
+            duration_minutes, avg_heart_rate, max_heart_rate, min_heart_rate,
+            image_url, video_url
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id
         "#,
         user_id,
@@ -89,7 +90,9 @@ pub async fn insert_workout_data(
         duration_minutes,
         avg_heart_rate,
         max_heart_rate,
-        min_heart_rate
+        min_heart_rate,
+        data.image_url.as_deref(),
+        data.video_url.as_deref()
     )
     .fetch_one(pool)
     .await

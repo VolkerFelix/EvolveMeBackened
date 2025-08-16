@@ -14,6 +14,8 @@ pub struct WorkoutData {
     pub heart_rate: Option<Vec<HeartRateData>>,
     pub calories_burned: Option<i32>,
     pub created_at: DateTime<Utc>,
+    pub image_url: Option<String>,
+    pub video_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow, sqlx::Decode)]
@@ -31,6 +33,8 @@ pub struct WorkoutDataSyncRequest {
     pub workout_uuid: String, // Required: Apple Health workout UUID for duplicate prevention
     pub workout_start: Option<DateTime<Utc>>, // Actual workout start time
     pub workout_end: Option<DateTime<Utc>>, // Actual workout end time
+    pub image_url: Option<String>,
+    pub video_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT \n                lse.id, lse.live_game_id, lse.user_id, lse.username, lse.team_id, lse.team_side,\n                lse.score_points, lse.power_contribution, lse.stamina_gained, lse.strength_gained,\n                lse.description, lse.occurred_at,\n                wd.id as \"workout_id?\",\n                wd.created_at as \"workout_date?\",\n                wd.workout_start as \"workout_start?\",\n                wd.workout_end as \"workout_end?\",\n                wd.duration_minutes as \"duration_minutes?\",\n                wd.calories_burned as \"calories_burned?\",\n                wd.avg_heart_rate as \"avg_heart_rate?\",\n                wd.max_heart_rate as \"max_heart_rate?\",\n                wd.min_heart_rate as \"min_heart_rate?\",\n                wd.heart_rate_zones as \"heart_rate_zones?\",\n                wd.stamina_gained as \"workout_stamina_gained?\",\n                wd.strength_gained as \"workout_strength_gained?\",\n                wd.total_points_gained as \"total_points_gained?\"\n            FROM live_score_events lse\n            LEFT JOIN workout_data wd ON lse.workout_data_id = wd.id\n            WHERE lse.live_game_id = $1\n            ORDER BY lse.occurred_at DESC\n            LIMIT $2\n            ",
+  "query": "\n            SELECT \n                lse.id, lse.live_game_id, lse.user_id, lse.username, lse.team_id, lse.team_side,\n                lse.score_points, lse.power_contribution, lse.stamina_gained, lse.strength_gained,\n                lse.description, lse.occurred_at,\n                wd.id as \"workout_id?\",\n                wd.created_at as \"workout_date?\",\n                wd.workout_start as \"workout_start?\",\n                wd.workout_end as \"workout_end?\",\n                wd.duration_minutes as \"duration_minutes?\",\n                wd.calories_burned as \"calories_burned?\",\n                wd.avg_heart_rate as \"avg_heart_rate?\",\n                wd.max_heart_rate as \"max_heart_rate?\",\n                wd.min_heart_rate as \"min_heart_rate?\",\n                wd.heart_rate_zones as \"heart_rate_zones?\",\n                wd.stamina_gained as \"workout_stamina_gained?\",\n                wd.strength_gained as \"workout_strength_gained?\",\n                wd.total_points_gained as \"total_points_gained?\",\n                wd.image_url as \"image_url?\",\n                wd.video_url as \"video_url?\"\n            FROM live_score_events lse\n            LEFT JOIN workout_data wd ON lse.workout_data_id = wd.id\n            WHERE lse.live_game_id = $1\n            ORDER BY lse.occurred_at DESC\n            LIMIT $2\n            ",
   "describe": {
     "columns": [
       {
@@ -127,6 +127,16 @@
         "ordinal": 24,
         "name": "total_points_gained?",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 25,
+        "name": "image_url?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 26,
+        "name": "video_url?",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -160,8 +170,10 @@
       true,
       false,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
-  "hash": "b19cc1b17887ba1a55d722ec3fbe986d2d53f301c1e818e37bc1d7774b5aa6d2"
+  "hash": "e0f07632a0215e8fcf3a5826e61750373fb2560cdd611e8d1841f415cc69bf6a"
 }

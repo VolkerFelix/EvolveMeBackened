@@ -21,6 +21,9 @@ pub struct WorkoutHistoryItem {
     // Game stats gained from this workout
     pub stamina_gained: i32,
     pub strength_gained: i32,
+    // Media attachments
+    pub image_url: Option<String>,
+    pub video_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,7 +99,9 @@ pub async fn get_workout_history(
             wd.heart_rate_data,
             wd.heart_rate_zones,
             COALESCE(wd.stamina_gained, 0) as stamina_gained,
-            COALESCE(wd.strength_gained, 0) as strength_gained
+            COALESCE(wd.strength_gained, 0) as strength_gained,
+            wd.image_url,
+            wd.video_url
         FROM workout_data wd
         WHERE wd.user_id = $1
         AND (wd.calories_burned > 100 OR wd.heart_rate_data IS NOT NULL)
@@ -141,6 +146,8 @@ pub async fn get_workout_history(
                     heart_rate_zones: row.heart_rate_zones, // Now directly from workout_data
                     stamina_gained: row.stamina_gained.unwrap_or(0) as i32,
                     strength_gained: row.strength_gained.unwrap_or(0) as i32,
+                    image_url: row.image_url,
+                    video_url: row.video_url,
                 }
             }).collect()
         },

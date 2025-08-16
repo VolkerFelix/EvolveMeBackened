@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE workout_data \n        SET \n            image_url = COALESCE($1, image_url),\n            video_url = COALESCE($2, video_url),\n            updated_at = NOW()\n        WHERE id = $3 AND user_id = $4\n        RETURNING id, image_url, video_url\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "video_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "82518f8cf722728c17e8084650a34d16008b54816dce1a526ba158f9e3e67031"
+}

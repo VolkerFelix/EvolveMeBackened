@@ -444,7 +444,9 @@ impl LiveGameQueries {
                 wd.heart_rate_zones as "heart_rate_zones?",
                 wd.stamina_gained as "workout_stamina_gained?",
                 wd.strength_gained as "workout_strength_gained?",
-                wd.total_points_gained as "total_points_gained?"
+                wd.total_points_gained as "total_points_gained?",
+                wd.image_url as "image_url?",
+                wd.video_url as "video_url?"
             FROM live_score_events lse
             LEFT JOIN workout_data wd ON lse.workout_data_id = wd.id
             WHERE lse.live_game_id = $1
@@ -489,7 +491,9 @@ impl LiveGameQueries {
                     "heart_rate_zones": row.heart_rate_zones,
                     "stamina_gained": row.workout_stamina_gained.unwrap_or(row.stamina_gained),
                     "strength_gained": row.workout_strength_gained.unwrap_or(row.strength_gained),
-                    "total_points_gained": row.total_points_gained.unwrap_or(row.score_points)
+                    "total_points_gained": row.total_points_gained.unwrap_or(row.score_points),
+                    "image_url": row.image_url,
+                    "video_url": row.video_url
                 });
             }
 

@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 actix-web = "4"
+actix-multipart = "0.6"
 actix-web-actors = "4.2" # Added for WebSocket support
 actix-cors = "0.7.0"
 actix = "0.13" # Actor framework for WebSockets
@@ -42,6 +43,7 @@ redis = { version = "0.23.0", features = ["tokio-comp", "connection-manager", "a
 thiserror = "1.0"
 lazy_static = "1.4"
 tokio-cron-scheduler = "0.13"
+sha2 = "0.10"
 
 [dev-dependencies]
 reqwest = { version = "0.12.12", features = ["json"] }
